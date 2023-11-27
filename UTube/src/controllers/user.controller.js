@@ -39,7 +39,8 @@ const registerUser = asyncHandler(async(req, res) => {
         throw new apiError(409, "User already exist")
     }
     // req.body ...... multer middle gives req.file 
-    console.log(req.files);
+    // console.log(req.files);
+    
     const avatarLocalPath =req.files?.avatar[0]?.path;
     // console.log(avatarLocalPath);
 
