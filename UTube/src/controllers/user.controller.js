@@ -5,6 +5,17 @@ import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import { apiResponse } from '../utils/apiResponse.js';
 
 
+const generateAccessAndRefreshTokens = async(userId) => {
+    try {
+        const user = await User.findById(userId)
+        const accessToken = await user.generateRefreshToken()
+        const refreshTeken = await user.generateAccessToken()
+        
+    } catch (error) {
+        throw new apiError(500, "Something went wrong while generating refresh and access token")
+    }
+}
+
 const registerUser = asyncHandler(async(req, res) => {
     // res.status(200).json({
     //     message: "OK",
@@ -89,4 +100,34 @@ const registerUser = asyncHandler(async(req, res) => {
     
 })
 
-export {registerUser} 
+const loginUser = asyncHandler(async (req, res) => {
+    // req body -> date
+    //  username or email
+    // find the user 
+    // password check
+    // access and refresh token
+    // send cookie
+
+    const {email, username, password} = req.body
+
+    if(!username || !email){
+        throw new apiError(400, "username or email is required")
+    }
+
+   const user = await User.findOne({
+        $or: [{username}, {email}]
+    })
+
+    if(!user){
+        throw new apiError(404, "user doesn't exists")
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(password)
+    if (!isPasswordValid) {
+        throw new apiError(401, 'Invalid Password')
+    }
+
+
+})
+
+export {registerUser, loginUser} 
