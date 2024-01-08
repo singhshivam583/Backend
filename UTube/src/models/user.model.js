@@ -47,11 +47,7 @@ const userSchema = new Schema(
             type: String,
         },
 
-    },
-    {
-        timestamps: true,
-    }
-);
+    }, {timestamps: true});
 
 // password incryption using bcrypt
 
