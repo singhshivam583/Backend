@@ -4,6 +4,7 @@ import { User } from '../models/user.model.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import { apiResponse } from '../utils/apiResponse.js';
 import { mongoose } from 'mongoose';
+import jwt  from 'jsonwebtoken';
 
 
 const generateAccessAndRefreshTokens = async(userId) => {
@@ -160,8 +161,11 @@ const logoutUser = asyncHandler(async(req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            // $set: {
+            //     refreshToken: undefined
+            // }
+            $unset: {
+                refreshToken: 1 // this will remove the field from the user
             }
         },
         {
@@ -191,7 +195,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
    try {
      const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
  
-     const user = User.findById(decodedToken._id)
+     const user = await User.findById(decodedToken._id)
      if(!user){
          throw new apiError(401, "invalid refresh token")
      }
@@ -205,7 +209,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
          secure: true
      }
  
-     const {accessToken, newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
+     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
+     const newRefreshToken = refreshToken;
+    //  console.log(accessToken)
+    //  console.log(newRefreshToken)
  
      return res.status(200)
      .cookie("accessToken", accessToken, options)
@@ -214,7 +221,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
          new apiResponse(200,
              {
                  accessToken,
-                 refreshToken : newRefreshToken
+                 refreshToken: newRefreshToken
              },
              "New Access Token Generated"
          )
@@ -322,8 +329,11 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
                 coverImage:coverImage.url
             }
         },
-        {new: true}
+        {
+            new: true
+        }
     ).select("-password")
+
     return res.status(200)
     .json(new apiResponse(200, user, "cover image updated succesfully"))
 })
@@ -395,13 +405,13 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
     }
     console.log(channel);
 
-    return res.statu(200)
+    return res.status(200)
     .json(new apiResponse(200, channel[0], "User channel fetched successfully"))
 
 
 })
 
-const getWatchHistory = asyncHandler(async() => {
+const getWatchHistory = asyncHandler(async(req, res) => {
     const user = await User.aggregate([
         {
             $match:{

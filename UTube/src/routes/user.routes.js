@@ -48,9 +48,8 @@ userRouter.route("/avatar").patch(verifyJWT,upload.single("avatar"),updateUserAv
 
 userRouter.route("/cover-image").patch(verifyJWT,upload.single("coverImage"),updateUserCoverImage)
 
-userRouter.route("/c/:username").get(verifyJWT,getUserChannelProfile)
+userRouter.route("/c/:username").get(verifyJWT,getUserChannelProfile) // give actual username like /c/:username => /c/shivam
 
 userRouter.route("/history").get(verifyJWT,getWatchHistory)
-
 
 export default userRouter
