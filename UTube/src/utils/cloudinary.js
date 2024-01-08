@@ -10,7 +10,7 @@ cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
     api_key: process.env.CLOUDINARY_API_KEY, 
     api_secret: process.env.CLOUDINARY_API_SECRET
-  });
+});
 
 
 const uploadOnCloudinary = async (localFilePath) => {
@@ -33,7 +33,27 @@ const uploadOnCloudinary = async (localFilePath) => {
     }
 }
 
-export {uploadOnCloudinary}
+const deleteOnCloudinary = async (url) => {
+    //  destructuring the url 
+    const [_, cloudName, version, publicId, format] = url.match(/https?:\/\/res\.cloudinary\.com\/([^/]+)\/image\/upload\/v(\d+)\/([^/]+)\.([^/]+)$/);
+    try {
+        if(!url) return null;
+        const response = await cloudinary.uploader.destroy(
+            publicId,
+            {resource_type: 'auto'}
+        )
+        return response;
+    } catch (error) {
+        return null;
+    }
+}
+
+// const publicIdDestructuring = (url) =>{
+//     const [_, cloudName, version, publicId, format] = url.match(/https?:\/\/res\.cloudinary\.com\/([^/]+)\/image\/upload\/v(\d+)\/([^/]+)\.([^/]+)$/);
+//     return publicId;
+// }
+
+export {uploadOnCloudinary, deleteOnCloudinary}
 
 //   cloudinary.v2.uploader.upload("https://upload.wikimedia.org/wikipedia/commons/a/ae/Olympic_flag.jpg",
 //   { public_id: "olympic_flag" }, 

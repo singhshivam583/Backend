@@ -1,7 +1,7 @@
 import {asyncHandler} from '../utils/asyncHandler.js';
 import { apiError } from '../utils/apiError.js';
 import { User } from '../models/user.model.js';
-import { uploadOnCloudinary } from '../utils/cloudinary.js';
+import { deleteOnCloudinary, uploadOnCloudinary } from '../utils/cloudinary.js';
 import { apiResponse } from '../utils/apiResponse.js';
 import { mongoose } from 'mongoose';
 import jwt  from 'jsonwebtoken';
@@ -289,7 +289,6 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
-
     if(!avatar.url){
         throw new apiError(400, "Error while uploading avatar")
     }
@@ -304,6 +303,12 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
         {new: true}
     ).select("-password")
 
+    //remove old image from cloudinary and local system
+    const deleteOldAvatar = await deleteOnCloudinary(req.user?.avatar)
+    if(!deleteOldAvatar){
+        throw new apiError(400, "Error while deleting old avatar file")
+    }
+
     return res.status(200)
     .json(new apiResponse(200, user, "Avtar image updated succesfully"))
 })
@@ -317,7 +322,6 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
     }
 
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
-
     if(!coverImage.url){
         throw new apiError(400, "Error while uploading cover image")
     }
@@ -334,11 +338,16 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
         }
     ).select("-password")
 
+    //  Add functionality to delete old images from cloudinary
+    const deleteOldCoverImage = await deleteOnCloudinary(req.user?.coverImage)
+    if(!deleteOldCoverImage){
+        throw new apiError(400, "Error while deleting old coverImage file")
+    }
+
     return res.status(200)
     .json(new apiResponse(200, user, "cover image updated succesfully"))
 })
 
-//  Add functionality to delete old images from cloudinary
 
 const getUserChannelProfile = asyncHandler(async(req, res) => {
     const {username} = req.params
