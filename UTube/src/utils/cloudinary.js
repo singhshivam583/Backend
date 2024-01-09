@@ -38,20 +38,13 @@ const deleteOnCloudinary = async (url) => {
     const [_, cloudName, version, publicId, format] = url.match(/https?:\/\/res\.cloudinary\.com\/([^/]+)\/image\/upload\/v(\d+)\/([^/]+)\.([^/]+)$/);
     try {
         if(!url) return null;
-        const response = await cloudinary.uploader.destroy(
-            publicId,
-            {resource_type: 'auto'}
-        )
+        const response = await cloudinary.uploader.destroy(publicId)
         return response;
     } catch (error) {
         return null;
     }
 }
 
-// const publicIdDestructuring = (url) =>{
-//     const [_, cloudName, version, publicId, format] = url.match(/https?:\/\/res\.cloudinary\.com\/([^/]+)\/image\/upload\/v(\d+)\/([^/]+)\.([^/]+)$/);
-//     return publicId;
-// }
 
 export {uploadOnCloudinary, deleteOnCloudinary}
 
