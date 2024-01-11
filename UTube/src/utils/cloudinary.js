@@ -28,6 +28,7 @@ const uploadOnCloudinary = async (localFilePath) => {
         return response;
             
     } catch (error) {
+        // console.log("error :",error)
         fs.unlinkSync(localFilePath) // remove the localy saved temp file as the upload operation failed
         return null ;
     }
@@ -35,16 +36,21 @@ const uploadOnCloudinary = async (localFilePath) => {
 
 const deleteOnCloudinary = async (url) => {
     //  destructuring the url 
-    const [_, cloudName, version, publicId, format] = url.match(/https?:\/\/res\.cloudinary\.com\/([^/]+)\/image\/upload\/v(\d+)\/([^/]+)\.([^/]+)$/);
+    const [_, cloudName, type, version, publicId, format] = url.match(/https?:\/\/res\.cloudinary\.com\/([^/]+)\/([^/]+)\/upload\/v(\d+)\/([^/]+)\.([^/]+)$/);
+    // const [_, cloudName, version, publicId, format] = url.match(/https?:\/\/res\.cloudinary\.com\/([^/]+)\/image\/upload\/v(\d+)\/([^/]+)\.([^/]+)$/);
+    // console.log(publicId)
+    // console.log(type)
     try {
         if(!url) return null;
-        const response = await cloudinary.uploader.destroy(publicId)
+        const response = await cloudinary.uploader.destroy(
+            publicId, 
+            {resource_type:`${type}`}
+        )
         return response;
     } catch (error) {
         return null;
     }
 }
-
 
 export {uploadOnCloudinary, deleteOnCloudinary}
 

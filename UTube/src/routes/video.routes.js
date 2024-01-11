@@ -13,8 +13,7 @@ import {upload} from "../middlewares/multer.middleware.js"
 const router = Router();
 router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
 
-router
-    .route("/")
+router.route("/")
     .get(getAllVideos)
     .post(
         upload.fields([
@@ -26,7 +25,6 @@ router
                 name: "thumbnail",
                 maxCount: 1,
             },
-            
         ]),
         publishAVideo
     );
