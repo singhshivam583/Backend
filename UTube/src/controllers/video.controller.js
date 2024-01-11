@@ -14,6 +14,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const publishAVideo = asyncHandler(async (req, res) => {
     const {title, description} = req.body
     // TODO: get video, upload to cloudinary, create video
+    const owner = req.user._id;
+
     if (!title || !description){
         throw new apiError(400, "Please all the fields")
     }
@@ -45,7 +47,8 @@ const publishAVideo = asyncHandler(async (req, res) => {
         description,
         videoFile:videoFile.url,
         thumbnail:thumbnail.url,
-        duration: videoFile.duration
+        duration: videoFile.duration,
+        owner,
     });
 
     const createdVideo = await Video.findById(video._id)
