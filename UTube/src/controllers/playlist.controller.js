@@ -13,7 +13,8 @@ const createPlaylist = asyncHandler(async (req, res) => {
     }
     const playlist = await Playlist.create({
         name,
-        description
+        description,
+        owner:req.user
     });
 
     const createdPlaylist = await Playlist.findById(playlist._id);
@@ -30,14 +31,23 @@ const createPlaylist = asyncHandler(async (req, res) => {
 const getUserPlaylists = asyncHandler(async (req, res) => {
     const {userId} = req.params
     //TODO: get user playlists
-    
+    const userPlaylists = await Playlist.find({owner: userId})
+    if(!userPlaylists){
+        throw new apiError(400, "No playlists found for this user")
+    }
 
-
+    return  res.status(201).json(new apiResponse(200, userPlaylists, "all user's playlist fetched successfully"))
 })
 
 const getPlaylistById = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     //TODO: get playlist by id
+    const playlist = await Playlist.findById(playlistId)
+    if(!playlist){
+        throw new apiError(400, "Playlist not found")
+    }
+
+    return res.status(201).json(new apiResponse(200, playlist, "playlist fetched successfully"))
 })
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
