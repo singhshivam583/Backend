@@ -17,26 +17,30 @@ const publishAVideo = asyncHandler(async (req, res) => {
     const owner = req.user._id;
 
     if (!title || !description){
-        throw new apiError(400, "Please all the fields")
+        throw new apiError(400, "Please fill all the fields")
     }
 
     const videoFilePath = req.files?.videoFile[0]?.path;
-    const thumbnailPath = req.files?.thumbnail[0]?.path;
     // console.log(videoFilePath)
-    // console.log(thumbnailPath)
-    if(!videoFilePath || !thumbnailPath ){
-        throw new apiError(400, "Video and thumbnail path is required")
+    if(!videoFilePath){
+        throw new apiError(400, "Video path is required")
     }
 
+    const thumbnailPath = req.files?.thumbnail[0]?.path;
+    // console.log(thumbnailPath)
+    if(!thumbnailPath ){
+        throw new apiError(400, "thumbnail path is required")
+    }
+    
     const videoFile = await uploadOnCloudinary(videoFilePath);
     if(!videoFile){
-        throw new apiError(400, "Video not uploaded")
+        throw new apiError(500, "Video not uploaded")
     }
 
     const thumbnail = await uploadOnCloudinary(thumbnailPath)
     if(!thumbnail){
         if(!thumbnail){
-            throw new apiError(400, "Thumbnail not uploaded")
+            throw new apiError(500, "Thumbnail not uploaded")
         }
     }
     // console.log(videoFile, thumbnail)
@@ -49,6 +53,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
         thumbnail:thumbnail.url,
         duration: videoFile.duration,
         owner,
+        isPublished: true,
     });
 
     const createdVideo = await Video.findById(video._id)
