@@ -19,6 +19,7 @@ const createTweet = asyncHandler(async (req, res) => {
         content:content,
         owner:req.user,
     })
+    // console.log(tweet)
 
     const createdTweet = await Tweet.findById(tweet._id)
     if(!createdTweet){
@@ -32,24 +33,101 @@ const getUserTweets = asyncHandler(async (req, res) => {
     // TODO: get user tweets
     const { userId } = req.params
 
-    const userTweets = await Tweet.find({"owner":userId}).select("content")
-    if(!userTweets){
-        throw new apiError(404,"No Tweets Found for this User")
+    const user = await User.findById(userId)
+    if(!user){
+        throw new apiError(400, "User Doesn't Exists")
     }
-    return res.status(201).json(new apiResponse(200, userTweets, "All the tweets fetched successfully"))
+
+    const UserTweet = await Tweet.aggregate([
+        {
+            $match:{
+                owner : new mongoose.Types.ObjectId(userId)
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+                pipeline:[
+                    {
+                        "$project" : {
+                            username:1,
+                            avatar:1,
+                        }
+                    }
+                ]
+            },
+        },
+        {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "tweet",
+                as: "likes",
+                pipeline:[
+                    {
+                        "$project" : {
+                            likedBy:1,
+                        }
+                    }
+                ]
+            },
+        },
+        {
+            $addFields : {
+                isLikedByUser : {
+                    $cond: {
+                        if :{
+                            $in : [ req.user?._id, "$likes.likedBy" ]
+                        },
+                        then: true,
+                        else: false,
+                    }
+                },
+                likesCount: {
+                    $size: "$likes"
+                },
+                owner: {
+                    $first : "$owner"
+                }, 
+            },
+        },
+        {
+            $project: {
+                content:1,
+                owner:1,
+                likesCount:1,
+                isLikedByUser:1,
+                createdAt:1,
+            },
+        },
+    ])
+
+    return res
+            .status(201)
+            .json(new apiResponse(200, UserTweet, "All the tweets fetched successfully"))
 })
 
 const updateTweet = asyncHandler(async (req, res) => {
     //TODO: update tweet
     const { tweetId } = req.params;
+    const { content } = req.body;
+
+    if(!content){
+        throw new apiError(400,'Content is missing to update a tweet');
+    }
+
     const tweet = await Tweet.findById(tweetId);
     if (!tweet) {
         throw new apiError(400, 'The tweet with given ID was not found')
     }
-    const { content } = req.body;
-    if(!content){
-        throw new apiError(400,'Content is missing to update a tweet');
+
+    if (tweet.owner !== req.user._id) {
+        throw new apiError(403, 'You are not authorized to perform this action');
     }
+
     const updateTweet = await Tweet.findByIdAndUpdate(
         tweetId,
         {
@@ -66,18 +144,26 @@ const updateTweet = asyncHandler(async (req, res) => {
 const deleteTweet = asyncHandler(async (req, res) => {
     //TODO: delete tweet
     const { tweetId } = req.params;
+
     const tweet = await Tweet.findById(tweetId);
     if (!tweet) {
         throw new apiError(400, 'The tweet with given ID does not exist')
     }
-    
-    const deletedTweet = await Tweet.deleteOne({"_id": tweet._id})
+
+    if (tweet.owner !== req.user._id) {
+        throw new apiError(403, 'You are not authorized to perform this action');
+    }
+
+    const deletedTweet = await Tweet.findByIdAndDelete(tweet._id)
+
     if (!deletedTweet) {
         throw new apiError(500, 'Error while deleting data')
     }
     // await video.remove()
 
-    return res.status(201).json( new apiResponse(200, deletedTweet, "Video deleted successfully"))
+    return res
+            .status(201)
+            .json( new apiResponse(200, deletedTweet, "Video deleted successfully"))
 })
 
 export {

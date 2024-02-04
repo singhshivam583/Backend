@@ -109,6 +109,7 @@ const addComment = asyncHandler(async (req, res) => {
         owner:req.user,
         video:videoId
     })
+    // console.log(comment)
 
     const createdComment = await Comment.findById(comment._id)
     if(!createdComment){
