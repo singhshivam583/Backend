@@ -138,7 +138,9 @@ const updateTweet = asyncHandler(async (req, res) => {
         { new: true}
     )
 
-    return res.status(201).json(new apiResponse(200, updateTweet, "Tweet updated succesfully"))
+    return res
+            .status(201)
+            .json(new apiResponse(200, updateTweet, "Tweet updated succesfully"))
 })
 
 const deleteTweet = asyncHandler(async (req, res) => {
